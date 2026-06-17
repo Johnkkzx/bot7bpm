@@ -12,8 +12,8 @@ const client = new Client({
 
 // Configurações fixas direto no script
 const CONFIG_BOT = {
-  ID_CARGO_ALVO: "1292571689841852426", // ID do cargo que os membros vão receber
-  PREFIXO_NOME: "Cidadão. ",           // Formato atualizado: Cidadão. Nick
+  ID_CARGO_ALVO: "1292571689841852426", // ID do cargo que os membros vão receber[cite: 1]
+  PREFIXO_NOME: "Cidadão. ",           // Formato: Cidadão. Nick
 };
 
 client.once('ready', () => {
@@ -28,10 +28,8 @@ client.on('interactionCreate', async interaction => {
 
   if (commandName === 'revisar') {
     try {
-      // Evita o erro de timeout de 3 segundos do Discord
       await interaction.deferReply({ ephemeral: true });
 
-      // Procura o cargo configurado dentro do servidor
       const cargoParaAtribuir = interaction.guild.roles.cache.get(CONFIG_BOT.ID_CARGO_ALVO);
       
       if (!cargoParaAtribuir) {
@@ -40,14 +38,11 @@ client.on('interactionCreate', async interaction => {
         });
       }
 
-      // Descarrega todos os membros do servidor para a memória
       const members = await interaction.guild.members.fetch();
       let alteradosContador = 0;
       let errosContador = 0;
 
-      // Executa a verificação individual em cada membro existente
       for (const [id, member] of members) {
-        // Ignora bots e o dono do servidor por restrições de hierarquia
         if (member.user.bot || member.id === interaction.guild.ownerId) continue;
 
         try {
@@ -59,11 +54,14 @@ client.on('interactionCreate', async interaction => {
             modificou = true;
           }
 
-          // Modifica o apelido caso não comece com o prefixo "Cidadão. "
-          const nomeAtual = member.displayName;
-          if (!nomeAtual.startsWith(CONFIG_BOT.PREFIXO_NOME)) {
-            const novoNome = `${CONFIG_BOT.PREFIXO_NOME}${nomeAtual}`;
-            await member.setNickname(novoNome.substring(0, 32));
+          // CORREÇÃO AQUI: Pega sempre o nome de usuário real da conta (ex: joao123) 
+          // ou o Nome Global (Ex: João) para evitar acumular "Cidadão. Cidadão."
+          const nomeRealDoUsuario = member.user.globalName || member.user.username;
+          const novoNomeCorreto = `${CONFIG_BOT.PREFIXO_NOME}${nomeRealDoUsuario}`;
+
+          // Se o apelido atual for diferente do novo formato correto, ele atualiza
+          if (member.nickname !== novoNomeCorreto) {
+            await member.setNickname(novoNomeCorreto.substring(0, 32));
             modificou = true;
           }
 
@@ -75,7 +73,6 @@ client.on('interactionCreate', async interaction => {
         }
       }
 
-      // Apresentação do relatório final no chat
       const embedResultado = new EmbedBuilder()
         .setColor('#00FF00')
         .setTitle('🛠️ Revisão de Membros Concluída')
@@ -96,23 +93,18 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// 2️⃣ LOGICA: ENTRADA AUTOMÁTICA (Para novos membros que entrarem a partir de agora)
+// 2️⃣ LOGICA: ENTRADA AUTOMÁTICA (Para novos membros)
 client.on('guildMemberAdd', async member => {
   console.log(`👤 Um novo membro entrou: ${member.user.tag}`);
   
   try {
-    // 1. Busca o cargo configurado
     const cargoAutomatico = member.guild.roles.cache.get(CONFIG_BOT.ID_CARGO_ALVO);
     
     if (cargoAutomatico) {
-      // Entrega o cargo na hora
       await member.roles.add(cargoAutomatico);
       console.log(`✅ Cargo automático adicionado para: ${member.user.tag}`);
-    } else {
-      console.error(`⚠️ Não foi possível dar o cargo automático: ID ${CONFIG_BOT.ID_CARGO_ALVO} não encontrado.`);
     }
 
-    // 2. Altera o nome na hora para o formato "Cidadão. NomeDoUsuario"
     const nomeBase = member.user.globalName || member.user.username;
     const novoNomeEntrada = `${CONFIG_BOT.PREFIXO_NOME}${nomeBase}`;
     
