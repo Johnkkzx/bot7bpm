@@ -9,17 +9,14 @@ const commands = [
     .toJSON()
 ];
 
-// Suporte para as variáveis de ambiente do Railway
+// IDs configurados diretamente no script
+const clientId = "1516573914002620550"; 
+const guildId = "1292571689841852426";   
 const token = process.env.TOKEN;
-const clientId = process.env.CLIENT_ID || process.env.APPLICATION_ID;
-const guildId = process.env.GUILD_ID;
 
-// Validação de segurança exibida nos logs do Railway
-if (!token || !clientId || !guildId) {
-  console.error("❌ ERRO: Variáveis de ambiente em falta no painel do Railway!");
-  console.log(`TOKEN: ${token ? 'OK' : 'EM FALTA'}`);
-  console.log(`CLIENT_ID/APPLICATION_ID: ${clientId ? 'OK' : 'EM FALTA'}`);
-  console.log(`GUILD_ID: ${guildId ? 'OK' : 'EM FALTA'}`);
+// Validação apenas para o Token que ficou na variável
+if (!token) {
+  console.error("❌ ERRO: O TOKEN está faltando no painel de variáveis do Railway!");
   process.exit(1);
 }
 
