@@ -12,7 +12,7 @@ const client = new Client({
 
 // Configurações fixas direto no script
 const CONFIG_BOT = {
-  ID_CARGO_ALVO: "1292571689841852426", // ID do cargo que os membros vão receber[cite: 1]
+  ID_CARGO_ALVO: "1516550378861105162", // ID do cargo que os membros vão receber[cite: 1]
   PREFIXO_NOME: "Cidadão. ",           // Formato: Cidadão. Nick
 };
 
