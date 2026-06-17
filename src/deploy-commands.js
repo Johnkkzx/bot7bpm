@@ -1,24 +1,25 @@
 require('dotenv').config();
 const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 
+// Definição do comando /revisar
 const commands = [
   new SlashCommandBuilder()
     .setName('revisar')
-    .setDescription('Revisa todos os membros.')
+    .setDescription('Altera o apelido e atribui o cargo a todos os membros do servidor.')
     .toJSON()
 ];
 
-// Puxa as variáveis do Railway (adicionada a alternativa APPLICATION_ID por segurança)
+// Suporte para as variáveis de ambiente do Railway
 const token = process.env.TOKEN;
 const clientId = process.env.CLIENT_ID || process.env.APPLICATION_ID;
 const guildId = process.env.GUILD_ID;
 
-// Validação simples para conferir os logs no painel
+// Validação de segurança exibida nos logs do Railway
 if (!token || !clientId || !guildId) {
-  console.error("❌ ERRO: Variáveis de ambiente faltando no painel do Railway!");
-  console.log(`TOKEN: ${token ? 'Preenchido' : 'VAZIO'}`);
-  console.log(`CLIENT_ID: ${clientId ? 'Preenchido' : 'VAZIO'}`);
-  console.log(`GUILD_ID: ${guildId ? 'Preenchido' : 'VAZIO'}`);
+  console.error("❌ ERRO: Variáveis de ambiente em falta no painel do Railway!");
+  console.log(`TOKEN: ${token ? 'OK' : 'EM FALTA'}`);
+  console.log(`CLIENT_ID/APPLICATION_ID: ${clientId ? 'OK' : 'EM FALTA'}`);
+  console.log(`GUILD_ID: ${guildId ? 'OK' : 'EM FALTA'}`);
   process.exit(1);
 }
 
@@ -26,15 +27,15 @@ const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
   try {
-    console.log('Iniciando o registro dos comandos (/) de barra...');
+    console.log('A iniciar o registo do comando (/) de barra...');
     
     await rest.put(
       Routes.applicationGuildCommands(clientId, guildId),
       { body: commands }
     );
     
-    console.log('✅ Comandos registrados com sucesso!');
+    console.log('✅ Comando registado com sucesso no Discord!');
   } catch (error) {
-    console.error('❌ Erro ao registrar os comandos:', error);
+    console.error('❌ Erro ao registar o comando:', error);
   }
 })();
