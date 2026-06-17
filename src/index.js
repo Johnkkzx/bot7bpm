@@ -4,17 +4,16 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,    // Necessita de estar ativo no Developer Portal
+    GatewayIntentBits.GuildMembers,    
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent   // Necessita de estar ativo no Developer Portal
+    GatewayIntentBits.MessageContent   
   ]
 });
 
-// CONFIGURAÇÃO AUTOMÁTICA
-// O bot irá usar o ID do cargo configurado na variável de ambiente GUILD_ID obtida do ficheiro rar
+// Configurações fixas direto no script (Altere os valores se necessário)
 const CONFIG_BOT = {
-  ID_CARGO_ALVO: process.env.GUILD_ID || "1292571689841852426", 
-  PREFIXO_NOME: "Cidadão | ", 
+  ID_CARGO_ALVO: "1292571689841852426", // ID do cargo que os membros vão receber
+  PREFIXO_NOME: "Cidadão | ",           // Prefixo que será adicionado ao nome
 };
 
 client.once('ready', () => {
@@ -28,10 +27,10 @@ client.on('interactionCreate', async interaction => {
 
   if (commandName === 'revisar') {
     try {
-      // Evita o erro de expiração (timeout) de 3 segundos do Discord
+      // Evita o erro de timeout de 3 segundos do Discord
       await interaction.deferReply({ ephemeral: true });
 
-      // Procura o cargo configurado dentro do servidor atual
+      // Procura o cargo configurado dentro do servidor
       const cargoParaAtribuir = interaction.guild.roles.cache.get(CONFIG_BOT.ID_CARGO_ALVO);
       
       if (!cargoParaAtribuir) {
@@ -40,7 +39,7 @@ client.on('interactionCreate', async interaction => {
         });
       }
 
-      // Procura e descarrega todos os membros do servidor para a memória
+      // Descarrega todos os membros do servidor para a memória
       const members = await interaction.guild.members.fetch();
       let alteradosContador = 0;
       let errosContador = 0;
@@ -72,7 +71,7 @@ client.on('interactionCreate', async interaction => {
             alteradosContador++;
           }
         } catch (err) {
-          // Incrementa se o robô não tiver permissões suficientes para modificar o utilizador
+          // Incrementa se o robô não tiver permissões suficientes (ex: Administradores)
           errosContador++;
         }
       }
