@@ -1,22 +1,26 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 
-// Cria o cliente do Bot com as permissões corretas (Intents)
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,    // Ativado no Developer Portal
+    GatewayIntentBits.GuildMembers,    // Necessita de estar ativo no Developer Portal
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent   // Ativado no Developer Portal
+    GatewayIntentBits.MessageContent   // Necessita de estar ativo no Developer Portal
   ]
 });
 
-// Mensagem executada quando o bot liga com sucesso
+// CONFIGURAÇÃO AUTOMÁTICA
+// O bot irá usar o ID do cargo configurado na variável de ambiente GUILD_ID obtida do ficheiro rar
+const CONFIG_BOT = {
+  ID_CARGO_ALVO: process.env.GUILD_ID || "1292571689841852426", 
+  PREFIXO_NOME: "Cidadão | ", 
+};
+
 client.once('ready', () => {
-  console.log(`✅ Bot online com sucesso como: ${client.user.tag}!`);
+  console.log(`✅ Robô online com sucesso como: ${client.user.tag}!`);
 });
 
-// Gerenciador de comandos de barra (Slash Commands)
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -24,28 +28,74 @@ client.on('interactionCreate', async interaction => {
 
   if (commandName === 'revisar') {
     try {
-      // Resposta temporária para o usuário não receber erro de timeout
-      await interaction.reply({ content: '🔄 Iniciando a revisão dos membros...', ephemeral: true });
+      // Evita o erro de expiração (timeout) de 3 segundos do Discord
+      await interaction.deferReply({ ephemeral: true });
+
+      // Procura o cargo configurado dentro do servidor atual
+      const cargoParaAtribuir = interaction.guild.roles.cache.get(CONFIG_BOT.ID_CARGO_ALVO);
       
-      // Aqui você pode adicionar a lógica do que o seu comando deve fazer
-      // Exemplo: buscar membros, verificar cargos, etc.
-      
-      await interaction.followUp({ content: '✅ Revisão concluída com sucesso!', ephemeral: true });
+      if (!cargoParaAtribuir) {
+        return await interaction.editReply({ 
+          content: `❌ Erro: O ID do cargo (${CONFIG_BOT.ID_CARGO_ALVO}) não foi encontrado neste servidor.` 
+        });
+      }
+
+      // Procura e descarrega todos os membros do servidor para a memória
+      const members = await interaction.guild.members.fetch();
+      let alteradosContador = 0;
+      let errosContador = 0;
+
+      // Executa a verificação individual em cada membro
+      for (const [id, member] of members) {
+        // Ignora bots e o dono do servidor por restrições de hierarquia
+        if (member.user.bot || member.id === interaction.guild.ownerId) continue;
+
+        try {
+          let modificou = false;
+
+          // 1. Atribui o cargo caso o membro não o possua
+          if (!member.roles.cache.has(cargoParaAtribuir.id)) {
+            await member.roles.add(cargoParaAtribuir);
+            modificou = true;
+          }
+
+          // 2. Modifica o apelido caso não comece com o prefixo definido
+          const nomeAtual = member.displayName;
+          if (!nomeAtual.startsWith(CONFIG_BOT.PREFIXO_NOME)) {
+            const novoNome = `${CONFIG_BOT.PREFIXO_NOME}${nomeAtual}`;
+            // Ajusta ao limite máximo de 32 caracteres do Discord para evitar falhas
+            await member.setNickname(novoNome.substring(0, 32));
+            modificou = true;
+          }
+
+          if (modificou) {
+            alteradosContador++;
+          }
+        } catch (err) {
+          // Incrementa se o robô não tiver permissões suficientes para modificar o utilizador
+          errosContador++;
+        }
+      }
+
+      // Apresentação visual do relatório final
+      const embedResultado = new EmbedBuilder()
+        .setColor('#00FF00')
+        .setTitle('🛠️ Revisão de Membros Concluída')
+        .setDescription('O processo de formatação automatizada foi terminado.')
+        .addFields(
+          { name: '✅ Membros Atualizados', value: `${alteradosContador}`, inline: true },
+          { name: '⚠️ Perfis Ignorados (Hierarquia Alta)', value: `${errosContador}`, inline: true }
+        )
+        .setTimestamp()
+        .setFooter({ text: `Solicitado por: ${interaction.user.tag}` });
+
+      await interaction.editReply({ embeds: [embedResultado] });
+
     } catch (error) {
-      console.error(error);
-      await interaction.followUp({ content: '❌ Houve um erro ao tentar executar esse comando.', ephemeral: true });
+      console.error('Erro durante a execução da revisão:', error);
+      await interaction.editReply({ content: '❌ Ocorreu um erro crítico ao processar os membros.' });
     }
   }
 });
 
-// Evento disparado quando um novo membro entra no servidor
-client.on('guildMemberAdd', member => {
-  console.log(`👤 Um novo membro entrou: ${member.user.tag}`);
-  // Adicione aqui suas boas-vindas ou ações automáticas
-});
-
-// Faz o login utilizando o Token configurado no Railway
-client.login(process.env.TOKEN).catch(err => {
-  console.error("❌ Erro ao fazer login. Verifique se o TOKEN está correto no Railway.");
-  console.error(err);
-});
+client.login(process.env.TOKEN);
