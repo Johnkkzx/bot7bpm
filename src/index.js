@@ -12,15 +12,15 @@ const client = new Client({
 
 // Configurações fixas direto no script
 const CONFIG_BOT = {
-  ID_CARGO_ALVO: "1507539278346059836", // ID do cargo que os membros vão receber
-  PREFIXO_NOME: "Conscrito. ",           // Formato: Cidadão. Nick
+  ID_CARGO_ALVO: "1516550378861105162", 
+  PREFIXO_NOME: "Cidadão. ",           
 };
 
 client.once('ready', () => {
   console.log(`✅ Robô online com sucesso como: ${client.user.tag}!`);
 });
 
-// 1️⃣ LOGICA: COMANDO /REVISAR (Para quem já está no servidor)
+
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -48,22 +48,20 @@ client.on('interactionCreate', async interaction => {
         try {
           let modificou = false;
 
-          // 🔥 ALTERAÇÃO AQUI: Verifica se o usuário tem OUTROS cargos além do alvo ou se não tem o alvo.
-          // O Discord conta o cargo "@everyone" (que tem o mesmo ID do servidor), por isso filtramos ele.
           const cargosAtuais = member.roles.cache.filter(role => role.id !== interaction.guild.id);
           const temApenasOCargoAlvo = cargosAtuais.size === 1 && cargosAtuais.has(cargoParaAtribuir.id);
 
           if (!temApenasOCargoAlvo) {
-            // Remove TODOS os cargos e define APENAS o cargo alvo de uma vez só
+            
             await member.roles.set([cargoParaAtribuir]);
             modificou = true;
           }
 
-          // Pega o nome de usuário real da conta
+          
           const nomeRealDoUsuario = member.user.globalName || member.user.username;
           const novoNomeCorreto = `${CONFIG_BOT.PREFIXO_NOME}${nomeRealDoUsuario}`;
 
-          // Se o apelido atual for diferente do novo formato correto, ele atualiza
+         
           if (member.nickname !== novoNomeCorreto) {
             await member.setNickname(novoNomeCorreto.substring(0, 32));
             modificou = true;
@@ -97,7 +95,6 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// 2️⃣ LOGICA: ENTRADA AUTOMÁTICA (Para novos membros)
 client.on('guildMemberAdd', async member => {
   console.log(`👤 Um novo membro entrou: ${member.user.tag}`);
   
