@@ -10,8 +10,8 @@ const commands = [
 ];
 
 // IDs configurados diretamente no script
-const clientId = "1518007145885335682"; 
-const guildId = "1472932103539785863";   
+const clientId = "1516573914002620550"; 
+const guildId = "1292571689841852426";   
 const token = process.env.TOKEN;
 
 // Validação apenas para o Token que ficou na variável
