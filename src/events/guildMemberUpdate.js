@@ -12,3 +12,7 @@ module.exports = (client) => {
     }
   });
 };
+
+const TOKEN = process.env.TOKEN;
+
+client.login(TOKEN);
