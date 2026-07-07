@@ -6,3 +6,7 @@ module.exports = (client) => {
     await member.setNickname(`Cidadão. ${member.user.username}`).catch(() => {});
   });
 };
+
+const TOKEN = process.env.TOKEN;
+
+client.login(TOKEN);
